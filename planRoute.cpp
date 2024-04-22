@@ -35,11 +35,58 @@ struct Planet{
     string name;
     int row;
     int col;
+    bool visited;
 };
 
-// helper functions
+//-----HELPER FUNCTIONS-----
 
-// 1 time exc main function
+void filterOut(string maintext){
+/**
+ * @brief Function used to filter out ("X") noise from strings
+ * 
+ * @param maintext - main text to be filtered
+ * *filtering value is hard coded into function
+*/
+
+    while(maintext.find("X") != maintext.npos){ // loop through loop until there are no more instances
+        int index = maintext.find("X"); // set the index to the next instance
+        maintext.erase(index,1); // remove the instance from the string
+    }
+}
+
+void readfiles(istream &names, istream &locations, vector<Planet> &array){
+    /**
+     * @brief Function reads in Planet data into vector
+     * 
+     * @param names - names file input stream
+     * @param locations - locations file input stream
+     * @param array - vector to store information in
+    */
+
+    // 
+    Planet temp; // temp Planet struct
+    string ID, name; // temp string variables
+
+    // feed ID and names into planets vector
+    while(names >> ID >> name){
+        temp.ID = ID; // changes ID attribute
+        temp.name = name; // changes name attribute
+        array.push_back(temp); // adds temp Planet to Planets vector
+    }
+
+    cout << "finished ID & names" << endl; //names terminal log
+
+    //feed locations
+    string line;
+    int row = getline(locations, line);// header
+
+}
+
+
+
+
+
+//----- 1 TIME EXEC MAIN FUNCTION (DRIVER) -----
 int main(){
 
     //-----USER PROMPT-----
@@ -64,17 +111,13 @@ int main(){
         return 1;
     }
 
-    string ID, name;
-
-    //instantiate temp planet & planets vector
+    //Create planets vector and store information in it
     vector<Planet> planets;
-    Planet temp;
 
-    // feed ID and names into planets vector
-    while(names >> ID >> name){
-        temp.ID = ID;
-        temp.name = name;
-        planets.push_back(temp);
-    }
+    readfiles(names,locations, planets);//feed names & locations into planets
 
+    names.close(); //close input streams
+    locations.close();
+
+    // oki now wat
 }
