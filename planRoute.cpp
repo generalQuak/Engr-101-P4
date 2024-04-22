@@ -185,15 +185,23 @@ double calcDistance(int cRow, int cCol, int pRow, int pCol) {
 
 
 
-double calcClosest(const vector<Planet> &planets, Planet ref,  ) {
+double calcClosest(const vector<Planet> &planets, vector<int> data, Planet ref) {
     /**
      * @brief Function will return the closest distance from reference planet to other planets
      * 
      * @param planets - 
      * @param referenceI - 
     */
+    int sCurRow = data.at(2); //starting row
+    int sCurCol = data.at(3); //starting col
+    
+    int eRow = data.at(4); // ending row
+    int eCol = data.at(5); // ending col 
+
     
     for (int i = 0; i < planets.size(); i++) {
+        double closestDist = 0;
+        
 
         // potDist stores the potential distance between the reference planet and the next
         double potDist = calcDistance(sCurRow, sCurCol, planets.at(i).row, planets.at(i).col);
@@ -290,6 +298,6 @@ int main(){
     locations.close();
 
     //----- make grid now-----
-    vector< vector<string> > grid = createGrid(data);
+    vector< vector<string> > grid = createGrid(data, planets);
     
 }
