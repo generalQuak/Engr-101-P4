@@ -36,7 +36,7 @@ struct Planet{
     string symbol;
     int row;
     int col;
-    bool visited;
+    bool visited = false;
 };
 
 
@@ -62,7 +62,7 @@ void filter(string &maintext){
     // removes all instances of "_"
     while(maintext.find("_") != maintext.npos){ // loop through loop until there are no more instances
         int index = maintext.find("_"); // set the index to the next instance
-        maintext.erase(index,1); // remove the instance from the string
+        maintext.replace(index,1, " "); // remove the instance from the string
     }
 
 }
@@ -92,7 +92,6 @@ void readFiles(istream &names, istream &locations, vector<Planet> &planets, vect
         planets.push_back(temp); // adds temp Planet to Planets vector
     }
 
-    //cout << "finished ID & names" << endl; //names terminal log
 
     //feed locations
     int gRows, gColumns, sRow, sColumn, eRow, eColumn;
@@ -128,11 +127,14 @@ void readFiles(istream &names, istream &locations, vector<Planet> &planets, vect
 
         } else {
             //not within grid
+            int k = 0;
+            while (ID != planets.at(k).ID) {
+                ++k;
+            }
+            planets.erase(planets.begin() + k);
             cout << ID <<" out of range - ignoring" << endl;
         }
     }
-
-    cout << "finished reading in planets" << endl; //planet terminal log
 }
 
 
@@ -171,25 +173,18 @@ vector<vector<string>> createGrid(const vector<int> &data, const vector<Planet> 
         grid.push_back(row); // appends each row to the grid
     }
 
-    cout << "DONE WITH BASE GRID-----\n   looping through each planet \nplanets.size(): "<< planets.size() << endl;
 
     //-adding planets to grid-
     for(size_t i = 0; i < planets.size(); i ++) { // loops through each planet
         Planet planet = planets.at(i);
 
-        cout << "starting with planet: " << planet.ID << ", index: " << i << endl;
-
         int row = (planet.row); //row
         int col = (planet.col); //col
-
-        cout << "row: " << row << ", col: " << col << endl;
 
         string symbol = planet.symbol; //planet symbol
 
         grid.at(row - 1).at(col -1) = symbol; // change position to symbol on grid
     }    
-
-    cout << "DONE WITH PLANETS" << endl;
 
     // adding start and end points
     grid.at(sRow -1).at(sCol - 1) = "S"; // marking starting point
@@ -218,44 +213,6 @@ double calcDistance(int cRow, int cCol, int pRow, int pCol) {
 }
 
 
-
-double calcClosest(const vector<Planet> &planets, int sCurRow, int sCurCol) {
-    /**
-     * @brief Function will return the closest distance from reference planet to other planets
-     * 
-     * @param planets - Vector of planets 
-     * // Might not be needed @param referenceI - A Reference planet or point 
-     * 
-     * @param sCurRow - The Current Row for reference.
-     * @param sCurCol - The current column for refernece
-     * @return Returns the distance from the reference planet to the closest stop (Planet/ End position)
-    */
-
-    double closestDist = -1.0; // value to be returned.
-
-    for (size_t i = 0; i < planets.size(); i++) {    
-        
-        // potDist stores the potential distance between the reference planet and the next
-        double potDist = calcDistance(sCurRow, sCurCol, planets.at(i).row, planets.at(i).col);
-
-        // if else if statement 
-        if (planets.at(i).visited == false) {
-            if(closestDist == -1.0 ) {
-            closestDist = potDist;
-            }
-            // maybe put something here... for when they're equal... maybe in calc Routedist
-            else if (potDist < closestDist) {
-            closestDist = potDist;
-            }
-
-        }
-        
-    }
-    return closestDist;
-}
-
-
-
 void calcRoute(vector<Planet> &planets, const vector<int> &data, vector<Planet> &planetsTraveled) {
     /**
      * @brief Function will append a vector of Planets traveled per Nearest Neighbor algorithm
@@ -267,47 +224,53 @@ void calcRoute(vector<Planet> &planets, const vector<int> &data, vector<Planet> 
     
     int sCurRow = data.at(2); //starting or current row position
     int sCurCol = data.at(3); //starting or current column position
+
     
     int eRow = data.at(4); // ending row position
     int eCol = data.at(5); // ending column position
 
     double closest = 0.0; // creates closest distance reference 
     
-    int index; // Reference what was the cloest distnace.
-
-    //Continues to Loop until route from start to end.
-    while (sCurRow != eRow && sCurCol != eCol) {
+    int index; // Reference what was the closest distnace.
+        
+    // checks if we have reached every planet yet
+    while(planets.size() != planetsTraveled.size()) {
         closest = -1.0; //set closest to a non valid value
 
-        // checks if we have reached every planet yet
-        if (planets.size() != planetsTraveled.size()) {
+        // iterates through each potential planet
+        for (size_t i = 0; i < planets.size(); ++i) {   
+            
+           //storing the closest
 
-            // iterates through each potential planet
-            for (size_t i = 0; i < planets.size(); ++i) {
-                
-                //storing the closest
-                double potClosestDist = calcClosest(planets, sCurRow, sCurCol);
+            double potDist = calcDistance(sCurRow, sCurCol, planets.at(i).row, planets.at(i).col);
+
+            if (planets.at(i).visited == false) {
                 if (closest == -1.0) {
-                    closest = potClosestDist;
+                    closest = potDist;
                     index = i;
                     }
-                else if (closest == potClosestDist) {
+                else if (closest == potDist) { 
                     if (planets.at(i).ID < planets.at(index).ID) {
-                        closest = potClosestDist;
+                        closest = potDist;
                         index = i;
                     }
                 }
-                else if (closest > potClosestDist) {
-                    closest = potClosestDist;
+                else if (closest > potDist) {
+                    closest = potDist;
                     index = i;
                 }
             }
-            sCurRow = planets.at(index).row;
-            sCurCol = planets.at(index).col;
-            planets.at(index).visited = true;
-            planetsTraveled.push_back(planets.at(index));
-        }     
-    }
+        }
+
+        sCurRow = planets.at(index).row;
+        sCurCol = planets.at(index).col;
+        planets.at(index).visited = true;
+        planetsTraveled.push_back(planets.at(index));
+    } 
+
+    sCurRow = eRow;
+    sCurCol = eCol;
+
 }
 
 
@@ -339,12 +302,13 @@ void writeFile(vector<Planet> &planetsTraveled, const vector<int> &data, vector<
    
    //-- PLANET INFO --
 
-   // loop through each planet and
+    //loop through each planet and
+   Planet planet; 
    for(size_t i = 0; i < planetsTraveled.size(); i++){
-    Planet planet = planetsTraveled.at(i);
 
+    planet = planetsTraveled.at(i);
     // print Planet info
-    summary << "Go to " << planet.name << " at " << planet.row << " " << planet.col << endl;
+    summary << "Go to " << planetsTraveled.at(i).name << " at " << planetsTraveled.at(i).row << " " << planetsTraveled.at(i).col << endl;
    }
    
    //-- END POS ---
@@ -363,11 +327,11 @@ int main(){
     string namesf;
 
     //locations filename
-    cout << "Enter Locations Filename:" << endl;
+    cout << "Enter Locations Filename: ";
     cin >> locationsf;
 
     //names filename
-    cout << "Enter Names Filename:" << endl;
+    cout << "Enter Names Filename: ";
     cin >> namesf;
 
     //-----OPENING FILES-----
@@ -386,27 +350,22 @@ int main(){
 
     readFiles(names, locations, planets, data); //feed names & locations into planets
 
-    cout << "-----Files Read" << endl;
 
     names.close(); //close input streams
     locations.close();
 
-    cout << "-----Input streams closed" << endl;
 
     //----- MAKE GRID-----
     vector< vector<string> > grid = createGrid(data, planets);
 
-    cout << "-----Made grid" << endl;
     
     //----- CALCULATE ROUTE -----
     vector<Planet> planetsTraveled;
     calcRoute(planets, data, planetsTraveled);
 
-    cout << "-----Calculated Route" << endl;
 
     //----- WRITE OUTPUT FILE ("journey.txt")-----
     writeFile(planetsTraveled, data, grid);
 
-    cout << "-----Wrote journey.txt" << endl;
 
 }
